@@ -1,0 +1,6 @@
+# Built package artifacts
+*.nupkg
+
+# Downloaded binary (fetched at install time, never committed)
+tools/agy.exe
+tools/*.ignore

@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <id>antigravity-cli</id>
+    <version>1.0.8</version>
+    <title>Antigravity CLI</title>
+    <authors>Google LLC</authors>
+    <!-- TODO: confirm this matches your community.chocolatey.org account name -->
+    <owners>MHutatah</owners>
+    <projectUrl>https://antigravity.google/</projectUrl>
+    <packageSourceUrl>https://github.com/MHutatah/chocolatey-antigravity-cli</packageSourceUrl>
+    <docsUrl>https://antigravity.google/docs</docsUrl>
+    <bugTrackerUrl>https://antigravity.google/support</bugTrackerUrl>
+    <projectSourceUrl>https://antigravity.google/</projectSourceUrl>
+    <!-- TODO: add an iconUrl served from a CDN (e.g. jsdelivr from your repo). Moderators usually ask for one. -->
+    <!-- <iconUrl>https://cdn.jsdelivr.net/gh/MHutatah/chocolatey-antigravity-cli@main/icon.png</iconUrl> -->
+    <licenseUrl>https://antigravity.google/terms</licenseUrl>
+    <requireLicenseAcceptance>true</requireLicenseAcceptance>
+    <copyright>Google LLC</copyright>
+    <releaseNotes>https://antigravity.google/changelog</releaseNotes>
+    <summary>Antigravity CLI - the terminal/TUI build of Google Antigravity (installed command: agy).</summary>
+    <description>
+**This is an unofficial, community-maintained package.** It is not maintained by or affiliated with Google.
+
+The [Antigravity CLI](https://antigravity.google/) is the lightweight terminal (TUI) surface of Google Antigravity, bringing its agentic capabilities - multi-step reasoning, multi-file editing, tool calling, and conversation history - directly to your terminal. It is the terminal successor to the Gemini CLI.
+
+This package downloads the official Antigravity CLI portable binary at install time directly from Google's official storage location, verifies it against a SHA256 checksum, and registers it on your PATH as `agy`. Both `x64` and `arm64` are supported.
+
+Antigravity is proprietary software. By installing you accept Google's [terms](https://antigravity.google/terms).
+    </description>
+    <tags>antigravity gemini google cli ai agent agentic llm terminal</tags>
+  </metadata>
+  <files>
+    <file src="tools\**" target="tools" />
+  </files>
+</package>

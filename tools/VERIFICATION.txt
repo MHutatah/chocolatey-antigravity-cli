@@ -1,0 +1,41 @@
+VERIFICATION
+------------
+
+This package is an UNOFFICIAL, community-maintained package. It is not
+maintained by, endorsed by, or affiliated with Google.
+
+The Antigravity CLI binary is NOT bundled in this package. It is downloaded at
+install time directly from Google's official public storage bucket
+(storage.googleapis.com/antigravity-public), the same location Google's own
+release channel and the winget package "Google.AntigravityCLI" serve from:
+
+  x64:   https://storage.googleapis.com/antigravity-public/antigravity-cli/1.0.8-5528783575449600/windows-x64/cli_windows_x64.exe
+  arm64: https://storage.googleapis.com/antigravity-public/antigravity-cli/1.0.8-5528783575449600/windows-arm/cli_windows_arm64.exe
+
+SHA256 checksums (also embedded in tools\chocolateyinstall.ps1), computed from
+the official binaries above:
+
+  x64:   C920099EB9932521DEC8430E6CB94934DA26B26AC1F21CDFBC49797833E4E0E0
+  arm64: F638B301522725D9F064C9C103CE661E7F0EB31EB89D54DE1284882CBA8D6311
+
+To verify, download a file above and compare its hash:
+
+  PS> (Get-FileHash -Algorithm SHA256 .\cli_windows_x64.exe).Hash
+
+The release build for each version is the one Google's published
+"antigravity-cli/latest" pointer resolves to at release time. These checksums
+can be independently cross-checked against the Microsoft winget-pkgs manifest
+once that community feed catches up to the same version:
+
+  https://github.com/microsoft/winget-pkgs/tree/master/manifests/g/Google/AntigravityCLI
+
+
+LICENSE
+-------
+
+Antigravity is proprietary software. Copyright (c) Google LLC.
+License / terms of service: https://antigravity.google/terms
+
+This package only automates the download and installation of the official
+binary; it does not modify or redistribute it. By installing, you accept
+Google's terms.

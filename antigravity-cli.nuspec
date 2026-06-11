@@ -11,7 +11,6 @@
     <packageSourceUrl>https://github.com/MHutatah/chocolatey-antigravity-cli</packageSourceUrl>
     <docsUrl>https://antigravity.google/docs</docsUrl>
     <bugTrackerUrl>https://antigravity.google/support</bugTrackerUrl>
-    <projectSourceUrl>https://antigravity.google/</projectSourceUrl>
     <iconUrl>https://cdn.jsdelivr.net/gh/MHutatah/chocolatey-antigravity-cli@8067f9def2aa4ccb84b13fe08e3cef0faa7f7b74/icon.png</iconUrl>
     <licenseUrl>https://antigravity.google/terms</licenseUrl>
     <requireLicenseAcceptance>true</requireLicenseAcceptance>

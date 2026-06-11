@@ -25,6 +25,10 @@ switch ($env:PROCESSOR_ARCHITECTURE) {
 
 Get-ChocolateyWebFile @packageArgs
 
-# Chocolatey automatically creates an 'agy' shim from tools\agy.exe at the end of
-# install (and removes it on uninstall), so no Install-BinFile call is needed.
+# Register exactly one shim named 'agy'. The .ignore stops Chocolatey's
+# auto-shimmer from creating a second shim for the same binary;
+# chocolateyUninstall.ps1 removes this shim on uninstall (Uninstall-BinFile).
+New-Item -ItemType File -Path "$($packageArgs.fileFullPath).ignore" -Force | Out-Null
+Install-BinFile -Name 'agy' -Path $packageArgs.fileFullPath
+
 Write-Host "Installed Antigravity CLI (command: agy)."

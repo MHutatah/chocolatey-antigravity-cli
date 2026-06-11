@@ -12,8 +12,7 @@
     <docsUrl>https://antigravity.google/docs</docsUrl>
     <bugTrackerUrl>https://antigravity.google/support</bugTrackerUrl>
     <projectSourceUrl>https://antigravity.google/</projectSourceUrl>
-    <!-- TODO: add an iconUrl served from a CDN (e.g. jsdelivr from your repo). Moderators usually ask for one. -->
-    <!-- <iconUrl>https://cdn.jsdelivr.net/gh/MHutatah/chocolatey-antigravity-cli@main/icon.png</iconUrl> -->
+    <iconUrl>https://cdn.jsdelivr.net/gh/MHutatah/chocolatey-antigravity-cli@8067f9def2aa4ccb84b13fe08e3cef0faa7f7b74/icon.png</iconUrl>
     <licenseUrl>https://antigravity.google/terms</licenseUrl>
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
     <copyright>Google LLC</copyright>

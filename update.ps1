@@ -1,11 +1,10 @@
 #requires -Version 5.1
 # Automated updater for the community antigravity-cli Chocolatey package.
 #
-# Resolves the latest release DIRECTLY from Google's public storage bucket (via
-# its 'latest' pointer), independent of the winget feed - so it tracks Google's
-# releases with no third-party-bot lag. It downloads both architecture binaries
-# to compute their SHA256 (the community feed requires checksums in the package),
-# rewrites the package files, and packs. With -Push it also publishes.
+# Resolves the latest release from Google's public storage bucket via its
+# 'latest' pointer, then reads Google's official CLI auto-updater manifests for
+# the exact public Google download URLs and SHA512 values. It rewrites the
+# package files and packs. With -Push it also publishes.
 #
 #   .\update.ps1               # update + pack only
 #   .\update.ps1 -Push         # update + pack + push (needs CHOCO_API_KEY)
@@ -27,56 +26,54 @@ $nuspecPath  = Join-Path $PSScriptRoot 'antigravity-cli.nuspec'
 $installPath = Join-Path $PSScriptRoot 'tools\chocolateyinstall.ps1'
 $verifyPath  = Join-Path $PSScriptRoot 'tools\VERIFICATION.txt'
 
-function Get-RemoteSha256([string]$url) {
-    # WebClient.DownloadFile streams to disk without the per-chunk progress-bar
-    # overhead that makes Invoke-WebRequest pathologically slow for large files.
-    $tmp = Join-Path ([IO.Path]::GetTempPath()) ([IO.Path]::GetRandomFileName())
-    try {
-        $wc = New-Object System.Net.WebClient
-        try { $wc.DownloadFile($url, $tmp) } finally { $wc.Dispose() }
-        (Get-FileHash -Algorithm SHA256 -LiteralPath $tmp).Hash.ToUpper()
-    } finally { Remove-Item -LiteralPath $tmp -Force -ErrorAction SilentlyContinue }
-}
-
 function Resolve-AntigravityRelease {
     param([switch]$ComputeHash)
     $base   = 'https://storage.googleapis.com'
     $bucket = 'antigravity-public'
-    $api    = "$base/storage/v1/b/$bucket/o"
+    $manifestBase = 'https://antigravity-cli-auto-updater-974169037036.us-central1.run.app/manifests'
 
-    $version = (Invoke-WebRequest -Uri "$base/$bucket/antigravity-cli/latest" -UseBasicParsing).Content.Trim()
-    if ($version -notmatch '^\d+\.\d+\.\d+$') { throw "Unexpected 'latest' pointer value: '$version'." }
-
-    # The release build is the one whose exe was uploaded when Google flipped
-    # 'latest' to this version (other build-ids are RCs/rebuilds).
-    $pointer = [datetime]((Invoke-RestMethod -Uri "$api/antigravity-cli%2Flatest").updated)
-
-    $list = Invoke-RestMethod -Uri "$api`?prefix=antigravity-cli/$version-&delimiter=/"
-    $prefixes = @($list.prefixes)
-    if (-not $prefixes) { throw "No build directories found for version $version." }
-
-    $chosen = $null; $bestDelta = [double]::MaxValue
-    foreach ($p in $prefixes) {
-        $enc = [uri]::EscapeDataString("${p}windows-x64/cli_windows_x64.exe")
-        try { $meta = Invoke-RestMethod -Uri "$api/$enc" } catch { continue }
-        $delta = [math]::Abs(([datetime]$meta.timeCreated - $pointer).TotalSeconds)
-        if ($delta -lt $bestDelta) { $bestDelta = $delta; $chosen = $p }
+    try {
+        $x64Manifest = Invoke-RestMethod -Uri "$manifestBase/windows_amd64.json"
+        $armManifest = Invoke-RestMethod -Uri "$manifestBase/windows_arm64.json"
+    } catch {
+        throw "Failed to download Google's CLI manifests from $manifestBase."
     }
-    if (-not $chosen) { throw "Could not resolve a release build for $version." }
-    $buildPath = $chosen.TrimEnd('/')
+    if ($x64Manifest.version -ne $armManifest.version) {
+        throw "Google CLI manifests report mismatched versions: x64=$($x64Manifest.version) arm64=$($armManifest.version)."
+    }
+
+    try {
+        $version = (Invoke-WebRequest -Uri "$base/$bucket/antigravity-cli/latest" -UseBasicParsing).Content.Trim()
+        if ($version -notmatch '^\d+\.\d+\.\d+$') { throw "Unexpected 'latest' pointer value: '$version'." }
+    } catch {
+        Write-Warning "Could not read Google's latest pointer; using CLI manifest version $($x64Manifest.version)."
+        $version = $x64Manifest.version
+    }
+
+    if ($x64Manifest.version -ne $version -or $armManifest.version -ne $version) {
+        throw "Google latest is $version, but CLI manifests report x64=$($x64Manifest.version) arm64=$($armManifest.version)."
+    }
+
+    $x64Url = $x64Manifest.url
+    $armUrl = $armManifest.url
+    $x64Sha = $x64Manifest.sha512
+    $armSha = $armManifest.sha512
+    if (-not ($x64Url -and $armUrl -and $x64Sha -and $armSha)) { throw "Could not parse Antigravity CLI URLs/checksums from Google's CLI manifests." }
+
+    $x64Build = [regex]::Match($x64Url, '/antigravity-cli/([^/]+)/windows-x64/').Groups[1].Value
+    $armBuild = [regex]::Match($armUrl, '/antigravity-cli/([^/]+)/windows-arm/').Groups[1].Value
+    if ($x64Build -ne $armBuild) { throw "Google CLI manifests have mismatched build paths: x64=$x64Build arm64=$armBuild." }
 
     $r = [ordered]@{
         Version = $version
-        Build   = ($buildPath -replace '^antigravity-cli/', '')
-        X64Url  = "$base/$bucket/$buildPath/windows-x64/cli_windows_x64.exe"
-        ArmUrl  = "$base/$bucket/$buildPath/windows-arm/cli_windows_arm64.exe"
-        X64Sha  = ''
-        ArmSha  = ''
+        Build   = $x64Build
+        X64Url  = $x64Url
+        ArmUrl  = $armUrl
+        X64Sha  = $x64Sha.ToUpper()
+        ArmSha  = $armSha.ToUpper()
     }
     if ($ComputeHash) {
-        Write-Host "Downloading binaries to compute SHA256 (x64 + arm64)..."
-        $r.X64Sha = Get-RemoteSha256 $r.X64Url
-        $r.ArmSha = Get-RemoteSha256 $r.ArmUrl
+        Write-Host "Using SHA512 values from Google's CLI manifests."
     }
     [pscustomobject]$r
 }
@@ -86,7 +83,7 @@ if ($ResolveOnly) {
     return
 }
 
-Write-Host "Resolving the latest Antigravity CLI directly from Google's storage bucket..."
+Write-Host "Resolving the latest Antigravity CLI from Google's latest pointer and CLI manifests..."
 $head    = Resolve-AntigravityRelease           # cheap: version + urls, no hashing yet
 $latest  = $head.Version
 $nuspec  = [xml](Get-Content $nuspecPath -Raw)
@@ -97,15 +94,15 @@ if ([version]$latest -le [version]$current) {
     return
 }
 
-# New version: now do the expensive hashing.
+# New version: now record the manifest checksums.
 $rel = Resolve-AntigravityRelease -ComputeHash
 
 # Parse the current URLs/checksums from the file so replacement is exact.
 $installText = Get-Content $installPath -Raw
 $oldX64Url = [regex]::Match($installText, 'https://\S+windows-x64/cli_windows_x64\.exe').Value
 $oldArmUrl = [regex]::Match($installText, 'https://\S+windows-arm/cli_windows_arm64\.exe').Value
-$oldX64Sha = [regex]::Match($installText, "(?s)windows-x64/cli_windows_x64\.exe'\s*\r?\n\s*\`$packageArgs\.checksum\s*=\s*'([0-9A-Fa-f]{64})'").Groups[1].Value
-$oldArmSha = [regex]::Match($installText, "(?s)windows-arm/cli_windows_arm64\.exe'\s*\r?\n\s*\`$packageArgs\.checksum\s*=\s*'([0-9A-Fa-f]{64})'").Groups[1].Value
+$oldX64Sha = [regex]::Match($installText, "(?s)windows-x64/cli_windows_x64\.exe'\s*\r?\n\s*\`$packageArgs\.checksum\s*=\s*'([0-9A-Fa-f]{64}|[0-9A-Fa-f]{128})'").Groups[1].Value
+$oldArmSha = [regex]::Match($installText, "(?s)windows-arm/cli_windows_arm64\.exe'\s*\r?\n\s*\`$packageArgs\.checksum\s*=\s*'([0-9A-Fa-f]{64}|[0-9A-Fa-f]{128})'").Groups[1].Value
 if (-not ($oldX64Url -and $oldArmUrl -and $oldX64Sha -and $oldArmSha)) {
     throw "Could not parse the current URLs/checksums from chocolateyinstall.ps1."
 }
@@ -114,6 +111,8 @@ foreach ($path in $installPath, $verifyPath) {
     $t = Get-Content $path -Raw
     $t = $t.Replace($oldX64Url, $rel.X64Url).Replace($oldArmUrl, $rel.ArmUrl)
     $t = $t.Replace($oldX64Sha, $rel.X64Sha).Replace($oldArmSha, $rel.ArmSha)
+    $t = [regex]::Replace($t, "checksumType\s*=\s*'sha(?:256|512)'", "checksumType = 'sha512'")
+    $t = $t.Replace('SHA256', 'SHA512').Replace('sha256', 'sha512')
     Set-Content -Path $path -Value $t -Encoding Ascii -NoNewline
 }
 

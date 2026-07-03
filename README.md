@@ -11,6 +11,6 @@ choco install antigravity-cli
 ```
 
 The package downloads the official Antigravity CLI binary (x64/arm64) at install
-time from Google's storage bucket and verifies it against a SHA256 checksum
+time from Google's storage bucket and verifies it against a SHA512 checksum
 (see [`tools/VERIFICATION.txt`](tools/VERIFICATION.txt)). A daily GitHub Action
 runs [`update.ps1`](update.ps1) to track Google's `antigravity-cli/latest` pointer.

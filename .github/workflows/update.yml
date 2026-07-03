@@ -1,8 +1,8 @@
 name: Auto-update Antigravity CLI package
 
-# Checks daily for a new Antigravity CLI release (via the winget-pkgs manifest),
-# and if found: updates the package files, packs, pushes to the Chocolatey
-# community feed, and commits the version bump back to this repo.
+# Checks daily for a new Antigravity CLI release (via Google's CLI manifests),
+# and if found: updates the package files, packs, commits the version bump back
+# to this repo, and pushes to the Chocolatey community feed.
 #
 # Requires one repository secret: CHOCO_API_KEY (your push API key from
 # https://community.chocolatey.org/account).
@@ -18,25 +18,46 @@ jobs:
     permissions:
       contents: write       # to commit the version bump back
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - name: Update, pack, and push if a new version exists
+      - name: Update and pack if a new version exists
+        id: update
         shell: pwsh
         env:
-          CHOCO_API_KEY: ${{ secrets.CHOCO_API_KEY }}
-        run: ./update.ps1 -Push
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ./update.ps1
+          $changed = -not [string]::IsNullOrWhiteSpace((git status --porcelain -- antigravity-cli.nuspec tools/chocolateyinstall.ps1 tools/VERIFICATION.txt))
+          $v = ([xml](Get-Content antigravity-cli.nuspec)).package.metadata.version
+          "changed=$($changed.ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT
+          "version=$v" >> $env:GITHUB_OUTPUT
 
       - name: Commit the version bump back to the repo
+        if: steps.update.outputs.changed == 'true'
         shell: pwsh
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add antigravity-cli.nuspec tools/chocolateyinstall.ps1 tools/VERIFICATION.txt
-          git diff --cached --quiet
-          if ($LASTEXITCODE -eq 0) {
-              Write-Host "No version change to commit."
-          } else {
-              $v = ([xml](Get-Content antigravity-cli.nuspec)).package.metadata.version
-              git commit -m "Update Antigravity CLI to $v"
-              git push
+          git commit -m "Update Antigravity CLI to $env:ANTIGRAVITY_VERSION"
+          git push
+        env:
+          ANTIGRAVITY_VERSION: ${{ steps.update.outputs.version }}
+
+      - name: Push package to Chocolatey
+        if: steps.update.outputs.changed == 'true'
+        shell: pwsh
+        env:
+          CHOCO_API_KEY: ${{ secrets.CHOCO_API_KEY }}
+          ANTIGRAVITY_VERSION: ${{ steps.update.outputs.version }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:CHOCO_API_KEY)) {
+              throw "CHOCO_API_KEY repository secret is not set."
+          }
+          $nupkg = "antigravity-cli.$env:ANTIGRAVITY_VERSION.nupkg"
+          if (-not (Test-Path $nupkg)) { throw "Missing package artifact: $nupkg" }
+          Write-Host "Pushing $nupkg ..."
+          choco push $nupkg --source https://push.chocolatey.org/ --api-key $env:CHOCO_API_KEY
+          if ($LASTEXITCODE -ne 0) {
+              throw "choco push failed. Check that CHOCO_API_KEY belongs to a Chocolatey account allowed to push package id 'antigravity-cli'."
           }

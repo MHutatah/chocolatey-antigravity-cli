@@ -50,8 +50,12 @@ function Resolve-AntigravityRelease {
         $version = $x64Manifest.version
     }
 
-    if ($x64Manifest.version -ne $version -or $armManifest.version -ne $version) {
-        throw "Google latest is $version, but CLI manifests report x64=$($x64Manifest.version) arm64=$($armManifest.version)."
+    if ($x64Manifest.version -ne $version) {
+        # Google publishes the 'latest' pointer and the CLI manifests separately, so the
+        # pointer can run ahead mid-rollout. Only the manifests carry download URLs and
+        # checksums, so package what they serve; the pointer version lands next run.
+        Write-Warning "Google latest is $version, but the CLI manifests still serve $($x64Manifest.version); packaging the manifest version."
+        $version = $x64Manifest.version
     }
 
     $x64Url = $x64Manifest.url

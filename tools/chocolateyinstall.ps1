@@ -14,12 +14,12 @@ $packageArgs = @{
 
 switch ($env:PROCESSOR_ARCHITECTURE) {
     'ARM64' {
-        $packageArgs.url      = 'https://storage.googleapis.com/antigravity-public/antigravity-cli/1.1.8-5636713813508096/windows-arm/cli_windows_arm64.exe'
-        $packageArgs.checksum = '1159967E80F3939F47A3BD6AECFE37DA9F4425C571CB4E91E17E842FEB550865016A894E5CE3A9263D9021B39D617B9BDF162AC355BB9BC03DF7BA0326D5ADF3'
+        $packageArgs.url      = 'https://storage.googleapis.com/antigravity-public/antigravity-cli/1.1.9-6572839516635136/windows-arm/cli_windows_arm64.exe'
+        $packageArgs.checksum = 'E9EE3960B023ADEC8BF6ADD28339BD9AB7CDDF01F6D4E9374DC134FAA21A44D195A0CB8DD5A0E308E37137F38A631630FEC5094662CDA13EADCE26B009F853F4'
     }
     default {
-        $packageArgs.url      = 'https://storage.googleapis.com/antigravity-public/antigravity-cli/1.1.8-5636713813508096/windows-x64/cli_windows_x64.exe'
-        $packageArgs.checksum = 'B345091C96ADB1FAAE7191BF0F9C77744E46E418ECF23B5037483E0A9041949D0C0858AC948A6FC462C68FBE40C0F0366BE14A022DFAF01CDA935BB7BFD15F89'
+        $packageArgs.url      = 'https://storage.googleapis.com/antigravity-public/antigravity-cli/1.1.9-6572839516635136/windows-x64/cli_windows_x64.exe'
+        $packageArgs.checksum = 'EA4E55761B8252DCF5E051C61B1CDAE1DCAFCB9B8A76672AAB13A2E8407FD8AE9FA5A389449F594C2FC970991AFD5188A4BEAD1B06FE86DBB096AC2472893AF1'
     }
 }
 

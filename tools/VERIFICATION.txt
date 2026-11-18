@@ -9,14 +9,14 @@ install time directly from Google's official public storage bucket
 (storage.googleapis.com/antigravity-public), using URLs published by Google's
 official CLI auto-updater manifests:
 
-  x64:   https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.10-5253791805734912/windows-x64/cli_windows_x64.exe
-  arm64: https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.10-5253791805734912/windows-arm/cli_windows_arm64.exe
+  x64:   https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.11-6132547114106880/windows-x64/cli_windows_x64.exe
+  arm64: https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.11-6132547114106880/windows-arm/cli_windows_arm64.exe
 
 SHA512 checksums (also embedded in tools\chocolateyinstall.ps1), read from
 Google's official CLI auto-updater manifests:
 
-  x64:   59A5E7B417A898B0322C7D6D6DF06E32CF292EB732096EC958E2CF0A411B40F1186A63CA14370B9BF978C8B619420852F7352531556D941F1D3B1C117D4C05AA
-  arm64: E4A6E8517904648B377656E849ADC90E50E920CF248E82F85778C8CD44094C1CDE39DE3027EC1DE57B6055B4011A2C021506D3CF496217DD8995B721C0B03E4D
+  x64:   7DE2A90B3A351C5C1D089B50A773D4FC455062870FA62FC4D50EE2779D7B9F1B630A7025C31163671F6C82AE0426AEDA838F98F67270A50FDD2C7DE2F2D7EB3F
+  arm64: A1C89CCA8D3C7AF9C3BDC77318975A9E0EB0FB93C421B198B14B18A4B65933C7ADEA2C9CB35651F7658E810B6241E8CF03A652B3B8BC221BBC2FCDB61EDC01B6
 
 To verify, download a file above and compare its hash:
 
